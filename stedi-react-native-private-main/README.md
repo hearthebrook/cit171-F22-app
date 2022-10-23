@@ -2,5 +2,5 @@
 `npm install`
 
 `npm start`
-
+ 
 `expo start --tunnel`
