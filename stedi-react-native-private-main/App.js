@@ -19,7 +19,29 @@ const App = () =>{
   const [homeTodayScore, setHomeTodayScore] = React.useState(0);
   const [phoneNumber, setPhoneNumber] = React.useState("");
   const [oneTimePassword, setOneTimePassword] = React.useState(null);
-   if (isFirstLaunch == true){
+   
+  useEffect(()=>{// Code that runs before we show App screen
+    const getSessionToken = async()=>{
+    const sessionToken = await AsyncStorage.getItem('sessionToken');
+    console.log('sessionToken', sessionToken);
+    const vallidateResponse = await fetch('https://dev.stedi.me/validate/'+sessionToken, 
+    {
+      method:'GET',
+      headers:{
+        'content-type':'spplication/text'
+      }
+    })
+    if (vallidateResponse.status==200){
+      setLoggedInState(loggedInStates.LOGGED_IN)
+      const userName = await vallidateResponse.text(); // storing user name in storage 
+      await AsyncStorage.setItem('userName', userName);
+      console.log('userName', userName);
+    }
+  };
+  getSessionToken(); // call the function so it calls the loggedin page (it will store it but not redirect)
+});
+  
+  if (isFirstLaunch == true){
 return(
   <OnboardingScreen setFirstLaunch={setFirstLaunch}/>
 );
@@ -82,7 +104,10 @@ return(
           }
           );
         if(loginResponse.status==200){
-          setLoggedInState(loggedInStates.LOGGED_IN);
+          // set variables before you move screens on app 
+          const sessionToken = await loginResponse.text();
+          await AsyncStorage.setItem('sessionToken', sessionToken); // local storage
+          setLoggedInState(loggedInStates.LOGGED_IN); // changes screen 
         }else{
           setLoggedInState(NOT_LOGGED_IN);
         }
