@@ -1,9 +1,10 @@
 
 import React, { useEffect, useState, } from 'react';
-import { StyleSheet, Text, View, Image, SafeAreaView , Share, ScrollView, Button} from 'react-native';
+import { StyleSheet, Text, View, Image, SafeAreaView , Share, ScrollView, Button, useRef} from 'react-native';
 import { Card, CardTitle, CardContent} from 'react-native-material-cards';
 import BarChart from 'react-native-bar-chart';
 import {Camera} from 'expo-camera'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // import Share from 'react-native-share';
 
@@ -22,10 +23,24 @@ import {Camera} from 'expo-camera';
 // const horizontalData = ['S', 'M', 'T', 'W', 'T', 'F','S'];
 
 const Profile = (props) => {
+
+  const[profilePhoto,setProfilePhoto] = useState(null);
+  const[userName, setUserName] = useState("");
+  const[cameraReady, setCameralReady] = useState(false);
+  const cameraRef = useRef(null);
+
   useEffect(()=>{
     const getUserInfo = async ()=>{
       const cameraPermission = await Camera.requestCameraPermissionsAsync();
-    };
+      // setCameraPermission(cameraPermission);
+
+      const userName = await AsyncStorage.getItem('userName');
+      console.log('userName', userName);
+      setUserName(userName);
+
+      const profilePhoto = await AsynckStorage.getItem('profilePhoto');
+      setProfilePhoto(profilePhoto);
+    }
     getUserInfo();
   },[]);
 
@@ -42,6 +57,29 @@ const Profile = (props) => {
   console.log('Error', error)
       }
     }
+
+if (profilePhoto == null){
+  const cameraOptions={
+    quality:0,
+    exif:false
+  }
+  return (
+    <View style={styles.container}>
+      <Camera style={styles.camera} ref={cameraRef} onCameraReady={()=>{setCameraReady (true) }}>
+        <View style={styles.buttonContainer}>
+          {cameraReady?<TouchableOpacity style={styles.button} onPress={async ()=> {
+          const picture = await cameraRef.current.takePictureAsync (cameraOptions);
+          console. log ('Picture' ,picture);
+          await AsyncStorage. setItem('profilePhoto', picture.uri);
+          setProfilePhoto(picture.uri);
+          }}>
+            <Text style={styles.text}>Take Picture</Text>
+          </TouchableOpacity>: null}
+        </View>
+      </Camera>
+    </View>
+  );
+} else{
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -68,6 +106,8 @@ elevation: 4}}>
     </Card>
  </SafeAreaView>
   );
+}
+// Where I added my curly brakcet haha. 
 };
 export default Profile;
 const styles = StyleSheet.create({
